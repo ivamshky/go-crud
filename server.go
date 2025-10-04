@@ -28,6 +28,8 @@ func main() {
 	mux.Handle("GET /user/{userId}", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleGetUserById)))
 	mux.Handle("POST /user", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleCreateUser)))
 	mux.Handle("GET /user", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleListUsers)))
+	mux.Handle("DELETE /user/{userId}", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleDeleteUser)))
+
 	log.Print("Listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", middlewares.LogRequest(mux)))
 }

@@ -137,3 +137,31 @@ func (h *UserHandler) HandleListUsers(writer http.ResponseWriter, request *http.
 		slog.Error("Error encoding success response: %v", err)
 	}
 }
+
+func (h *UserHandler) HandleDeleteUser(writer http.ResponseWriter, request *http.Request) {
+	rawUserId := request.PathValue("userId")
+	var userId int64
+	_, err := fmt.Sscanf(rawUserId, "%d", &userId)
+	if err != nil {
+		slog.Error("Invalid userID received: ", "userId", rawUserId)
+		http.Error(writer, "Invalid userId format. expecting /user/{id}", http.StatusBadRequest)
+		return
+	}
+	user, err := h.s.GetUserDetails(request.Context(), userId)
+	if err != nil {
+		if errors.Is(err, common.ErrNotFound) {
+			http.Error(writer, fmt.Sprintf("User with Id: %d Not found.", userId), http.StatusNotFound)
+			return
+		}
+		slog.Error("Internal server error: ", err)
+		http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	err = h.s.DeleteUser(request.Context(), user.Id)
+	if err != nil {
+		slog.Error("Error Occurred while Deleting user: ", err)
+		http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
+	}
+	//writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+}
