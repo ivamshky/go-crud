@@ -57,7 +57,15 @@ func (u *UserRepositoryImpl) ListUsers(ctx context.Context, params model.ListUse
 			Valid:  true,
 		}
 	}
+	if params.Limit != nil {
+		paramsSqlc.Limit = int32(*params.Limit)
+	}
 
+	if params.Offset != nil {
+		paramsSqlc.Offset = int32(*params.Offset)
+	}
+
+	slog.Info("[REPOSITORY] Searching with Parameters", "params", paramsSqlc)
 	usersResult, err := u.q.ListUsers(ctx, paramsSqlc)
 	if err != nil {
 		return nil, fmt.Errorf("db error when listing %w", err)

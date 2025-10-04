@@ -15,12 +15,16 @@ type UserService struct {
 	userRepo repository.UserRepository
 }
 
+func NewUserService(repo repository.UserRepository) *UserService {
+	return &UserService{userRepo: repo}
+}
+
 func (u *UserService) GetUserDetails(ctx context.Context, userId int64) (model.User, error) {
 	slog.Info("Getting user details", "userId", userId)
 	user, err := u.userRepo.FindById(ctx, userId)
 	if err != nil {
 		if errors.Is(err, common.ErrNotFound) {
-			return model.User{}, fmt.Errorf("user Not found id: %d", userId)
+			return model.User{}, err
 		}
 		return model.User{}, fmt.Errorf("internal Error: %w", err)
 	}

@@ -1,32 +1,35 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/ivamshky/go-crud/handler"
 	"github.com/ivamshky/go-crud/middlewares"
+	"github.com/ivamshky/go-crud/repository"
+	"github.com/ivamshky/go-crud/service"
 )
 
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleRoot)
-	mux.Handle("/user", middlewares.RequireAuth(http.HandlerFunc(handleUser)))
+
+	db, err := sql.Open("mysql", "dbadmin:1234@/userdb")
+	if err != nil {
+		slog.Error("Error connecting to DB", "err", err)
+		return
+	}
+	userHandler := handler.NewUserHandler(service.NewUserService(repository.NewUserRepository(db)))
+
+	mux.Handle("GET /user/{userId}", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleGetUserById)))
+	mux.Handle("POST /user", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleCreateUser)))
+	mux.Handle("GET /user", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleListUsers)))
 	log.Print("Listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", middlewares.LogRequest(mux)))
-}
-
-func handleUser(writer http.ResponseWriter, request *http.Request) {
-	switch request.Method {
-	case "GET":
-		fmt.Fprint(writer, "GET /user called")
-		break
-	case "POST":
-		fmt.Fprint(writer, "POST /user called")
-		break
-	default:
-		panic("Unsupported method")
-	}
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {

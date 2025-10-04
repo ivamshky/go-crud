@@ -33,7 +33,7 @@ func LogRequest(next http.Handler) http.Handler {
 		)
 		userAttrs := slog.Group("user", "ip", ip)
 		requestAttrs := slog.Group("request", "method", method, "content-type", contentType, "protocol", proto, "headers", headers)
-		slog.Info("Request Data: ", userAttrs, requestAttrs)
+		slog.Info("Request Data: ", "userAttrs", userAttrs, "requestAttrs", requestAttrs)
 		next.ServeHTTP(w, r)
 	})
 }
