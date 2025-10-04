@@ -1,0 +1,41 @@
+services:
+  go-api:
+    container_name: go-api
+    build:
+      context: .
+      dockerfile: go-api.Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - go-crud-network
+    depends_on:
+      - db
+    links:
+      - db
+
+  db:
+    container_name: mysql-db
+    restart: always
+    networks:
+      - go-crud-network
+    build:
+      context: .
+      dockerfile: mysql-db.Dockerfile
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: userdb
+      MYSQL_USER: dbadmin
+      MYSQL_PASSWORD: 1234
+    volumes:
+      - "db-data:/var/lib/mysql"
+
+volumes:
+  db-data:
+
+networks:
+  go-crud-network:
+
+
+

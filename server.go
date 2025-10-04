@@ -17,12 +17,18 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleRoot)
-
-	db, err := sql.Open("mysql", "dbadmin:1234@/userdb")
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		"dbadmin", // MySQL username
+		"1234",    // MySQL password
+		"db",      // Host IP or service name
+		"3306",    // MySQL port
+		"userdb")  //db name
+	db, err := sql.Open("mysql", connString)
 	if err != nil {
 		slog.Error("Error connecting to DB", "err", err)
 		return
 	}
+	defer db.Close()
 	userHandler := handler.NewUserHandler(service.NewUserService(repository.NewUserRepository(db)))
 
 	mux.Handle("GET /user/{userId}", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleGetUserById)))
