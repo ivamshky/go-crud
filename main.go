@@ -16,7 +16,7 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handleRoot)
+	mux.HandleFunc("/swagger.html", serveAPISpec)
 	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
 		"dbadmin", // MySQL username
 		"1234",    // MySQL password
@@ -40,6 +40,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", middlewares.LogRequest(mux)))
 }
 
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World\n")
+func serveAPISpec(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./docs/api.yaml")
 }
