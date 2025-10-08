@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -12,9 +13,19 @@ import (
 	"github.com/ivamshky/go-crud/middlewares"
 	"github.com/ivamshky/go-crud/repository"
 	"github.com/ivamshky/go-crud/service"
+	"google.golang.org/grpc"
 )
 
 func main() {
+
+	RESTApiServer(8080)
+}
+
+func serveAPISpec(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./docs/api.yaml")
+}
+
+func RESTApiServer(port int) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/swagger.html", serveAPISpec)
 	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
@@ -36,10 +47,24 @@ func main() {
 	mux.Handle("GET /user", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleListUsers)))
 	mux.Handle("DELETE /user/{userId}", middlewares.RequireAuth(http.HandlerFunc(userHandler.HandleDeleteUser)))
 
-	log.Print("Listening on port 8080...")
-	log.Fatal(http.ListenAndServe(":8080", middlewares.LogRequest(mux)))
+	log.Printf("Listening on port %d...", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), middlewares.LogRequest(mux)))
 }
 
-func serveAPISpec(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./docs/api.yaml")
+func GrpcServer() {
+	lis, err := net.Listen("tcp", ":9001")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	// create a new grpc server
+	grpcServer := grpc.NewServer()
+
+	// register our server struct as a handle for the CoffeeShopService rpc calls that come in through grpcServer
+	//pb.RegisterCoffeeShopServer(grpcServer, &server{})
+
+	// Serve traffic
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %s", err)
+	}
 }
