@@ -12,11 +12,11 @@ import (
 
 type UserServer struct {
 	pb.UnimplementedUserServiceServer
-	userService service.UserService
+	UserService *service.UserService
 }
 
 func (server *UserServer) GetUser(context context.Context, req *pb.GetUserRequest) (*pb.User, error) {
-	userDetails, err := server.userService.GetUserDetails(context, req.Id)
+	userDetails, err := server.UserService.GetUserDetails(context, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func (server *UserServer) GetUser(context context.Context, req *pb.GetUserReques
 }
 
 func (server *UserServer) CreateUser(context context.Context, req *pb.CreateUserRequest) (*pb.User, error) {
-	userDetails, err := server.userService.CreateUser(context, model.User{
+	userDetails, err := server.UserService.CreateUser(context, model.User{
 		Name:  req.Name,
 		Email: req.Email,
 		Age:   req.Age,
