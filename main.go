@@ -32,11 +32,14 @@ func main() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		var wg sync.WaitGroup
+
 		go RESTApiServer(ctx, &wg, db)
 		go GrpcServer(ctx, &wg, db)
+
 		slog.Info("Interrupt to close servers")
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
 		sig := <-sigCh
 		slog.Info(fmt.Sprintf("Interrupt signal %v received. Initiating shutdown", sig))
 		cancel()
